@@ -1,75 +1,166 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
+// app/index.tsx
+import JobCard from "@/components/JobCard";
+import { icons } from "@/constants/icons";
+import { profiles } from "@/constants/profiles";
+import { addSavedJob } from "@/utils/savedJobs";
+import { useRouter } from "expo-router";
+import { StatusBar } from "expo-status-bar";
+import React, { useState } from "react";
+import { Image, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
-import { HelloWave } from '@/components/HelloWave';
-import ParallaxScrollView from '@/components/ParallaxScrollView';
-import { ThemedText } from '@/components/ThemedText';
-import { ThemedView } from '@/components/ThemedView';
+export default function Index() {
+  const [search, setSearch] = useState("");
+  const router = useRouter();
 
-export default function HomeScreen() {
+  const jobs = [
+    { id: "1", profileImage: profiles.annan, jobTitle: "Catering Boy", companyName: "EventX Services", location: "Kochi, Edappilly", experience: "0 months", salary: "999" },
+    { id: "2", profileImage: profiles.john, jobTitle: "Delivery Executive", companyName: "Swiggy", location: "Kochi, Kerala", experience: "6 months", salary: "15,000" },
+    { id: "3", profileImage: profiles.cj, jobTitle: "Plumber", companyName: "LocalFix", location: "Ernakulam", experience: "1 year", salary: "12,000" },
+    { id: "4", profileImage: profiles.bateman, jobTitle: "Electrician", companyName: "QuickServe", location: "Thrissur", experience: "2 years", salary: "18,000" },
+    { id: "5", profileImage: profiles.mrbean, jobTitle: "Painter", companyName: "BrightHomes", location: "Aluva", experience: "3 months", salary: "10,000" },
+  ];
+
+  // ✅ Apply filtering logic
+  const filteredJobs = jobs.filter(
+    (job) =>
+      job.jobTitle.toLowerCase().includes(search.toLowerCase()) ||
+      job.companyName.toLowerCase().includes(search.toLowerCase()) ||
+      job.location.toLowerCase().includes(search.toLowerCase())
+  );
+
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12',
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-        <ThemedText>
-          {`Tap the Explore tab to learn more about what's included in this starter app.`}
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          {`When you're ready, run `}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+    <SafeAreaView style={styles.safe} edges={["top", "left", "right"]}>
+      <StatusBar style="light" backgroundColor="#000"/>
+      {/* Header + Search */}
+      <View style={styles.headerStack}>
+        <View style={styles.header}>
+          <Text style={styles.logo}>Gigzu</Text>
+          <Image source={icons.person} style={styles.headerIcon} />
+          <Text style={styles.tag}>Your job hunt starts here...</Text>
+        </View>
+        <View style={styles.searchWrapper}>
+          <View style={styles.searchBox}>
+            <Image source={icons.search} style={styles.searchIcon} />
+            <TextInput
+              style={styles.searchInput}
+              placeholder="Search jobs..."
+              placeholderTextColor="#9aa0a6"
+              value={search}
+            onChangeText={setSearch}
+            underlineColorAndroid="transparent"
+            />
+          </View>
+        </View>
+      </View>
+
+      {/* Job Cards list */}
+      <ScrollView
+        contentContainerStyle={styles.list}
+        showsVerticalScrollIndicator={false}
+      >
+        {filteredJobs.length > 0 ? (
+          filteredJobs.map((job) => (
+            <JobCard
+              key={job.id}
+              profileImage={job.profileImage}
+              jobTitle={job.jobTitle}
+              companyName={job.companyName}
+              location={job.location}
+              salary={job.salary}
+              posterName={job.companyName}
+              experience={job.experience}
+              onSave={() => {
+                addSavedJob({
+                  id: job.id,
+                  profileImage: job.profileImage,
+                  jobTitle: job.jobTitle,
+                  companyName: job.companyName,
+                  location: job.location,
+                  salary: job.salary,
+                  posterName: job.companyName,
+                  experience: job.experience,
+                });
+              }}
+              onPress={() =>
+                router.push({
+                  pathname: "/Jobs/[id]",
+                  params: {
+                    id: job.id,
+                    title: job.jobTitle,
+                    company: job.companyName,
+                    location: job.location,
+                    salary: job.salary,
+                    experience: job.experience,
+                  },
+                })
+              }
+            />
+          ))
+        ) : (
+          <Text style={{ textAlign: "center", marginTop: 40, color: "#777" }}>
+            No jobs found
+          </Text>
+        )}
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
+  safe: { flex: 1, backgroundColor: "#f3f4f6" },
+  headerStack: {
+    position: "relative",
+    paddingBottom: 72,
   },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
+  header: {
+    backgroundColor: "#000",
+    borderBottomRightRadius: 50,
+    borderBottomLeftRadius: 50,
+    paddingHorizontal: 20,
+    paddingTop: 50,
+    paddingBottom: 32,
+    position: "relative",
   },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
+  logo: { color: "white", fontSize: 32, fontWeight: "700" },
+  headerIcon: {
+    width: 26,
+    height: 26,
+    tintColor: "white",
+    position: "absolute",
+    right: 20,
+    top: 28,
+  },
+  tag: { color: "white", marginTop: 8, fontSize: 16 },
+  searchWrapper: {
+    position: "absolute",
+    left: 20,
+    right: 20,
+    bottom: -10,
+    zIndex: 2,
+    elevation: 3,
+  },
+  searchBox: {
+    backgroundColor: "white",
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    elevation: 4,
+    borderWidth: 0,
+    borderColor: "transparent",
+    shadowColor: "#000",
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 4 },
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  searchIcon: { width: 18, height: 18, tintColor: "#888", marginRight: 10 },
+  searchInput: { flex: 1, fontSize: 16, color: "#222" },
+  list: {
+    paddingHorizontal: 20,
+    paddingTop: 64,
+    paddingBottom: 60,
+    rowGap: 20,
   },
 });
